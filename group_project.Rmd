@@ -33,6 +33,7 @@ library(DT)
 #### 예를들면 서울시 정부차원에서 만든 
 
 
+## 변수 설명 
 ```{r variables, echo = FALSE}
 variabledes <- readxl::read_xlsx("variables.xlsx", sheet = 1, col_names = TRUE)
 datatable(variabledes,
@@ -42,7 +43,6 @@ datatable(variabledes,
 ```
 
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r cars}
 summary(cars)

@@ -21,37 +21,25 @@ library(readxl)
 library(funModeling)
 library(tidyr)
 library(data.table)
+library(DT)
 ```
 
-# 서울시 공공자전거
+# 연구 주제 및 연구 목적 
+## 서울시 공공자전거
 
 #### Airbnb, Uber 등과 같은 공유경제모델 색깔을 띈 회사들이 많이 나와 국민들의 관심 또한 커져 범정부적 차원에서도 공공 welfare를 위한 많은 프로그램들이 나왔다. 
 <br> 
 
 #### 예를들면 서울시 정부차원에서 만든 
 
-# 종속변수
-# Count: 
-<br> 
 
-# 독립변수: 
-# Weekend: 
-# time.1 :
-# time.2:
-# time.3:
-# time.4:
-# time.5: 
-# temperature : 
-# precipitation: 
-# windspeed: 
-# humidity: 
-# visibility: 
-# ozone: 
-# pm10: 
-# pm2.5: 
-
-
-
+```{r variables, echo = FALSE}
+variabledes <- readxl::read_xlsx("variables.xlsx", sheet = 1, col_names = TRUE)
+datatable(variabledes,
+          filter = 'top', options = list(
+            pageLength = 8, autoWidth = TRUE
+          ))
+```
 
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:

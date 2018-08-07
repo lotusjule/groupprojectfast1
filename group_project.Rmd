@@ -39,8 +39,13 @@ library(DT)
 
 ## 변수 설명 
 ```{r variables, echo = FALSE}
-variabledes <- readxl::read_xlsx("variables.xlsx", sheet = 1, col_names = TRUE)
-datatable(variabledes,
+depvariable <- readxl::read_xlsx("Data/variables.xlsx", sheet = 1, col_names = TRUE)
+datatable(depvariable,
+          filter = 'top', options = list(
+            pageLength = 8, autoWidth = TRUE
+          ))
+indvariable <- readxl::read_xlsx("Data/variables.xlsx", sheet = 2, col_names = TRUE)
+datatable(indvariable,
           filter = 'top', options = list(
             pageLength = 8, autoWidth = TRUE
           ))

@@ -26,11 +26,15 @@ library(DT)
 
 # 연구 주제 및 연구 목적 
 ## 서울시 공공자전거
-
 #### Airbnb, Uber 등과 같은 공유경제모델 색깔을 띈 회사들이 많이 나와 국민들의 관심 또한 커져 범정부적 차원에서도 공공 welfare를 위한 많은 프로그램들이 나왔다. 
 <br> 
 
-#### 예를들면 서울시 정부차원에서 만든 
+# 연구 범위 설정
+
+# 구 설정이유 
+
+# 데이터 수집 
+
 
 
 ## 변수 설명 
@@ -42,13 +46,11 @@ datatable(variabledes,
           ))
 ```
 
+# 상관분석 
+
+# [회귀모형]
 
 
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
 
 You can also embed plots, for example:
 

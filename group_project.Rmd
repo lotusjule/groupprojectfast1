@@ -1,5 +1,5 @@
 ---
-title: "Group Project (Fast Campus)"
+title: "서울시 공공자전거 따릉이 수요요인의 중요도 예측"
 author: "Jiwon Kim"
 date: '2018-08-06'
 output: html_document
@@ -10,56 +10,283 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r include=FALSE}
-library(leaflet)
 library(dplyr)
 library(ggplot2)
 library(lubridate)
 library(anytime)
+library(extrafont)
 library(timeDate)
 library(stringr)
 library(readxl)
-library(funModeling)
 library(tidyr)
 library(data.table)
 library(DT)
+library(car)
+library(corrplot)
+library(caret)
 ```
 
 # 연구 주제 및 연구 목적 
-## 서울시 공공자전거
-#### Airbnb, Uber 등과 같은 공유경제모델 색깔을 띈 회사들이 많이 나와 국민들의 관심 또한 커져 범정부적 차원에서도 공공 welfare를 위한 많은 프로그램들이 나왔다. 
+## 서울시 공공자전거 (따릉이) 수요 예측
+
 <br> 
 
-# 연구 범위 설정
 
-# 구 설정이유 
+### 연구 목적 
+구별 대여량이 가장 많은 마포구의 따릉이 시간대별 따릉이 수요 예측을 통한 따릉이 관리 및 재배치 인력의 효율성 제고
 
 # 데이터 수집 
+- 날씨: [기상청]()
+- 대기환경: [서울열린데이터광장](http://data.seoul.go.kr/dataList/datasetView.do?infId=OA-2221&srvType=A&serviceKind=1)
+- 따릉이 자료 수집: 
+a) [공공자전거 대여이력정보](http://data.seoul.go.kr/dataList/datasetView.do?infId=OA-15182&srvType=F&serviceKind=1&currentPageNo=1)
+b) 
+<br>
+2017년 4-6월 서울시 내 따릉이 대여일시, 대여정류소, 반납정류소 정보가 있다.
+구정보 또한 'numeric vector'으로 되어있음으로 
 
+b) 
 
+## 변수 설명: 
 
-## 변수 설명 
-```{r variables, echo = FALSE}
-depvariable <- readxl::read_xlsx("Data/variables.xlsx", sheet = 1, col_names = TRUE)
-datatable(depvariable,
-          filter = 'top', options = list(
-            pageLength = 8, autoWidth = TRUE
-          ))
+#### 종속변수 
+
+Dependent Variable  | Description
+------------------- | -------------
+Count               | 특정한 구의 정류소를 이용한 수
+
+<br> 
+
+#### 독립변수 
+```{r independent variables, echo = FALSE}
 indvariable <- readxl::read_xlsx("Data/variables.xlsx", sheet = 2, col_names = TRUE)
 datatable(indvariable,
           filter = 'top', options = list(
             pageLength = 8, autoWidth = TRUE
           ))
 ```
+<br> 
+
+
+## 연구 범위 설정
+
+### 기간 설정
+데이터량을 고려하여 2017년 전체가 아닌 2017년 2분기를 연구 범위로 설정
+#### 기간 설정 이유
+1년을 기준으로 1년 중 2분기가 특히 기후 변화의 영향을 크게 받을 것으로 예상
+'날씨','따릉이 수요량'간의 관계를 파악하기 용이함
+
+```{r design, echo = FALSE}
+temp <- read.csv("Data/weather_temp.csv", header = TRUE, fileEncoding = 'UTF-8', sep = ",")
+colnames(temp) <- c("서울", "일시", "평균기온")
+temp$date <- temp$일시
+temp$temp <- temp$평균기온
+par(mfrow=c(1,1))
+barplot(temp$temp, 
+        border = NA, 
+        space = 0.25,
+        main="Average temperature of Year 2017 in Seoul",
+        ylab="temerature (°C)",
+        col="skyblue2")
+```
+
+### 데이터 전처리 
+
+### a) 
+
+
+#### b) 구 설정
+
+```{r stations, echo = FALSE}
+station.merge <- read.csv("Data/station_merge.csv", header = TRUE, sep = ",")
+ggplot2:: ggplot(data = station.merge, aes(x= station.no, user_count)) +ggtitle("Station numbers and rent frequency of Seoul") +geom_point(aes(size=user_count), shape=21, fill="#02B58A",color="#dadada") +guides(fill=guide_legend(title=NULL)) +geom_text(aes(y=user_count),label=station.merge$gu,vjust=-1.1,size=4) +xlab("Station #") +ylab("Rented") +theme(panel.background = element_rect(fill = "#F6F1EB",size=2),panel.grid.major = element_line(colour = "#DADADA",linetype = "dashed"),panel.grid.minor = element_line(colour = "#F6F1EB"),legend.title = element_blank(),legend.justification = "bottom",legend.key = element_rect(fill = "white"),legend.background=element_rect(colour = '#dadada',size=0.01),plot.title = element_text(colour="#706f6f", size=22,hjust=0.5,vjust=3,face="bold"),axis.title=element_text(colour = "#706f6f",size=15),axis.text = element_text(colour="#706f6f"))
+```
+
+Conclusion: 서울시 마포구
+
+#### 구 설정 이유 
+'서울시 구별 따릉이 대여소 수와 대여량' 분석 결과, 마포구의 대여량이 가장 많은 것으로 나타남
+구별 대여량이 많기에 자전거 수작업 재배치는 물론, 관련 기반시설 관리 인력이 많이 필요할 것으로 추측해볼 수 있음
+
 
 # 상관분석 
 
+```{r correlation analysis, echo=FALSE}
+mapo <- read.csv("Data/mapo_naxx.csv", sep = ",", header = TRUE, encoding = 'UTF-8')
+corr <- cor(mapo[, 4:18])
+corrplot::corrplot(corr, method = "color", cl.pos = 'n', rect.col = "black",  tl.col = "black", addCoef.col = "black", number.digits = 2, number.cex = 0.50, tl.cex = 0.9, cl.cex = 1, col = colorRampPalette(c("green4","white","red"))(100))
+```
+
+<br> 
+
 # [회귀모형]
 
+### 회귀분석
+<br> 
+## i) 데이터 정제
 
+## ozone, pm10, pm2.5의 NA를 다음 row 값으로 대체
+```{r cars}
 
-You can also embed plots, for example:
+mapo_na <- mapo
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+for(i in 1:nrow(mapo_na)){
+  if(is.na(mapo_na[i, "ozone"])){
+    mapo_na[i, "ozone"] <- mapo_na[i+1, "ozone"]
+  }
+  if(is.na(mapo_na[i, "pm10"])){
+    mapo_na[i, "pm10"] <- mapo_na[i+1, "pm10"]
+  }
+  if(is.na(mapo_na[i, "pm2.5"])){
+    mapo_na[i, "pm2.5"] <- mapo_na[i+1, "pm2.5"]
+  }
+}
+
 ```
+
+## NA가 없는 데이터과 , NA를 다음 행 값으로 대체한 데이터 분석 결과, 모델의 AIC, MSE, r-squared 값이 99% 유사하다는 결과가 나왔다. 그밖에 NA를 포함한 데이터는 회귀모형 선정 과정에 오류가 있었으므로 NA가 없는 데이터로 최종 선정하였다. 
+
+
+
+## ii) 다중회귀모형
+##  - 1 기존 독립변수 전부 사용
+
+# (1) train/test dataset 생성
+# p = 0.6, 0.7, 0.8 세 경우에 대해 분석 진행함
+
+```{r mapo_na, echo=FALSE}
+set.seed(0)
+mapo_na.index <- caret::createDataPartition(mapo_na$count, p = 0.6)
+mapo_na.train <- mapo_na[unlist(mapo_na.index) , ] 
+mapo_na.test <- mapo_na[-unlist(mapo_na.index) , ]
+
+mapo_na.lm <- lm(count ~ weekend + time.1 + time.2 + time.3 + time.4 + time.5 + temperature + precipitation + windspeed + humidity + visibility + ozone + pm10 + pm2.5, data = mapo_na.train)
+summary(mapo_na.lm)
+
+
+```
+
+# (2) 독립변수 제거
+# - step function 이용한 독립변수 최적화
+
+```{r mapo_na1, include=FALSE}
+mapo.backward <- step(mapo_na.lm, direction = "backward")
+summary(mapo.backward)
+mapo.forward  <- step(mapo_na.lm, direction = "forward")
+summary(mapo.forward)
+mapo.stepwise <- step(mapo_na.lm, direction = "both")
+summary(mapo.stepwise)
+```
+
+# - 종속변수 대비 상관계수 0.2미만 독립변수 제거 (cor > 0.2)
+# - 종속변수 대비 상관계수 0.4미만 독립변수 제거 (cor > 0.4)
+
+```{r core, echo = FALSE}
+
+core <- cor(mapo[,c("time.4",
+              "temperature",
+              "windspeed",
+              "humidity","count")
+              ])
+
+corrplot(core)
+
+```
+
+# (3) 적절한 모형 선택 
+
+```{r core1, echo = FALSE}
+
+mapo.predict <- predict(mapo.backward, newdata = mapo_na.test)
+mean((mapo_na.test$count - mapo.predict)**2)  
+
+```
+
+# p = 0.6, backward / stepwise 방법으로 도출한 모델이 가장 AIC가 낮았음 
+# MSE, r-squared는 AIC에 비해 변화가 크지 않음 
+
+
+
+## iii) 회귀 모형 평가
+
+```{r mapo.final, echo = FALSE}
+
+mapo.final <- mapo.backward
+par(mfrow = c(2, 2))
+plot(mapo.final) 
+
+```
+
+```{r mapo.final1, echo = FALSE}
+
+# 1. 정규성 가정
+shapiro.test(mapo.final$residuals) # p < 0.05로 정규성 가정을 기각함 
+
+# 2. 독립성 가정
+## 시계열데이터가 서로 다른 시차의 오차항이 서로 상관을 보이는 것(Autocorrelation) 생길 수 있는 문제.
+## 자기상관을 안갖는다를 증명해 보이려 durbinWatsonTest시행.
+## 일반적으로 2에 가까울수록 만족한다고 봄.
+car::durbinWatsonTest(mapo.final)  # p < 0.05로 독립성 가정을 기각함  (p = 0.00, D-W = 1.24)
+
+# 3. 등분산성 검정 
+car::ncvTest(mapo.final)           # p < 0.05로 등분산성 가정 기각 
+
+# 4. 에러에 대한 전반적 가정의 검정
+library(gvlma)
+summary(gvlma::gvlma(mapo.final))  # p < 0.05로 assumptions not satisfied
+```
+
+## iv) 회귀모형의 해석
+
+```{r mapo.final3, echo = FALSE}
+
+# 1. 다중공선성 확인 
+car::vif(mapo.final) # 모든 VIF < 10 
+
+# 2. 독립변수들의 영향력 비교 
+relweights <- function(fit,...){
+  R <- cor(fit$model)
+  nvar <- ncol(R)
+  rxx <- R[2:nvar, 2:nvar]
+  rxy <- R[2:nvar, 1]
+  svd <- eigen(rxx)
+  evec <- svd$vectors
+  ev <- svd$values
+  delta <- diag(sqrt(ev))
+  lambda <- evec %*% delta %*% t(evec)
+  lambdasq <- lambda ^ 2
+  beta <- solve(lambda) %*% rxy
+  rsquare <- colSums(beta ^ 2)
+  rawwgt <- lambdasq %*% beta ^ 2
+  import <- (rawwgt / rsquare) * 100
+  import <- as.data.frame(import)
+  row.names(import) <- names(fit$model[2:nvar])
+  names(import) <- "Weights"
+  import <- import[order(import),1, drop=FALSE]
+  dotchart(import$Weights, labels=row.names(import),
+           xlab="% of R-Square", pch=19,
+           main="Relative Importance of Predictor Variables",
+           sub=paste("Total R-Square=", round(rsquare, digits=3)),
+           ...)
+  return(import)
+}
+fit <- lm(count ~ weekend + time.1 + time.2 + time.3 + time.4 + time.5 + temperature + precipitation + windspeed + humidity + visibility + ozone + pm10 + pm2.5, data = mapo_na.train)
+
+relweights(fit, col="steel blue")
+```
+
+# Standardized Coefficients::
+#   (Intercept)        time.1        time.2        time.3 
+# 0.00000000    0.21908334    0.06114777    0.23704393 
+# time.4        time.5   temperature precipitation 
+# 0.65026107    0.30878509    0.34403638   -0.15360869 
+# windspeed      humidity          pm10 
+
+
+# time.4 (퇴근시간대/저녁), temperature는 시간별 자전거 이용량에 높은 영향을 준다.
+
+
+
+# [Rooms for improvement]
+
 
